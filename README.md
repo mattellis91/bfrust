@@ -1,2 +1,2 @@
-# rustfuck
+# bfrust
 Brainfuck interpreter in rust
