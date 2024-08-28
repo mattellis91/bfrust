@@ -1,9 +1,9 @@
-use std::{env, fs, string};
+use std::{env, fs, char};
 
 
 #[derive(Debug)]
 pub struct Interpreter {
-    cells: Vec<i32>,
+    mem: Vec<i32>,
     inst_pointer: usize, //instruction pointer
     mem_pointer: usize, //memory pointer
     add_stack: Vec<usize>, //address stack
@@ -15,15 +15,12 @@ pub struct Interpreter {
 impl Interpreter {
     
     fn interpret(&mut self) {
-        let mut eof = false;
+        let eof = false;
 
         let tokens = self.tokenize();
 
-        // dbg!(tokens);
-
         while !eof {
-            if self.inst_pointer >= tokens.len() || self.inst_pointer < 0 {
-                eof = true;
+            if self.inst_pointer >= tokens.len() {
                 break;
             }
 
@@ -35,20 +32,19 @@ impl Interpreter {
                     }
                 }
                 '+' => {
-                    self.cells[self.mem_pointer] += 1;
+                    self.mem[self.mem_pointer] += 1;
                 }
                 '-' => {
-                    self.cells[self.mem_pointer] -= 1;
+                    self.mem[self.mem_pointer] -= 1;
                 }
                 '.' => {
-                    self.output.push_str(&self.cells[self.mem_pointer].to_string());
+                    self.output.push((self.mem[self.mem_pointer] as u8) as char);
                 }
                 ',' => {
                     //TODO: implement input
                 }
                 '[' => {
-                    println!("Add stack: {:?}", self.add_stack);
-                    if self.cells[self.mem_pointer] != 0  {
+                    if self.mem[self.mem_pointer] != 0  {
                         self.add_stack.push(self.inst_pointer)
                     } else {
                         let mut count = 1;
@@ -63,17 +59,18 @@ impl Interpreter {
                     }
                 }
                 ']' => {
-                    self.inst_pointer = self.add_stack.pop().unwrap_or(self.inst_pointer);
+                    if self.add_stack.len() > 0 {
+                        self.inst_pointer = self.add_stack.pop().unwrap() - 1;
+                    }
                 }
                 _ => {}
             }
 
-            // println!("{:?}: {:?}", self.inst_pointer, tokens[self.inst_pointer]);
             self.inst_pointer += 1;
         }
 
         if self.output.len() > 0 {
-            println!("OUTPUT: {:?}", self.output);
+            println!("{}", self.output);
         }
 
     }
@@ -90,10 +87,6 @@ impl Interpreter {
 
     fn is_valid_token(&self, ch:char) -> bool {
         return ch == '>' || ch == '<' || ch == '+' || ch == '-' || ch == '.' || ch == ',' || ch == '[' || ch == ']';
-    }
-
-    fn set_output(&self) {
-
     }
 
 }
@@ -113,7 +106,7 @@ fn main() {
     }
 
     let mut interpreter = Interpreter{
-        cells: vec![0; 100],
+        mem: vec![0; 100],
         inst_pointer: 0,
         mem_pointer: 0,
         add_stack: Vec::new(),
@@ -122,7 +115,7 @@ fn main() {
         output: String::new(),
     };
 
+    let x = interpreter.mem[0];
     interpreter.interpret();
-    println!("{:?}", interpreter)
 
 }
